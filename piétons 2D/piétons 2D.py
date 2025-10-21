@@ -95,3 +95,4 @@ ax.set_title("Simulation de piétons (animation)")
 ani = FuncAnimation(fig, update, frames=steps, interval=50, blit=True, repeat=False)
 
 plt.show()
+
