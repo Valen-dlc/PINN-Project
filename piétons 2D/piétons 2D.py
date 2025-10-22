@@ -9,6 +9,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+
+
+
 # --- Paramètres de la rue ---
 L = 100.0   # longueur (m)
 W = 7    # largeur (m)
