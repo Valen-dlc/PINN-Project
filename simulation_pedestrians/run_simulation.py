@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-
+#voir si sa marche 
 from simulation_pedestrians.utils.update import update
 
-def run_pedestrian_simulation(L:float = 100.0, 
+def run_pedestrian_simulation(L:float = 150.0, 
                               W:int = 7, 
                               N: int = 15, 
                               v_desired:float = 1.3, 
