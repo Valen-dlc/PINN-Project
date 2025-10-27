@@ -118,7 +118,7 @@ plt.show()
 
 
 # ==== paramètres du cadrillage ====
-nx, ny = 10, 2       # nb de cases en x et y (ajuste si besoin)
+nx, ny = 100, 14      # nb de cases en x et y (ajuste si besoin)
 normalize =False    # True: densité normalisée par nb de piétons actifs à chaque frame
 
 # ==== bords des cellules ====
