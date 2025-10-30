@@ -13,7 +13,7 @@ def run_pedestrian_simulation(L: float = 150.0,
                               B: float = 0.5,
                               wall_repulsion: int = 1,
                               dt: float = 0.5,
-                              steps: int = 200,nx: int=100, ny:int = 14 ):
+                              steps: int = 200,nx: int=100, ny:int = 14, show:bool=True ):
 
     # --- Initialisation des états ---
     positions = np.zeros((N, 2))
@@ -45,8 +45,8 @@ def run_pedestrian_simulation(L: float = 150.0,
         fargs=(positions, velocities, v_desired, relax_time, A, B,
                wall_repulsion, W, L, dt, scat, steps, All_positions, All_velocities)
     )
-
-    plt.show()
+    if show:
+     plt.show()
 
     # --- Tracé des trajectoires enregistrées ---
     fig2, ax2 = plt.subplots(figsize=(12, 3))
@@ -60,8 +60,8 @@ def run_pedestrian_simulation(L: float = 150.0,
     for i in subset:
         traj = All_positions[:, i, :]
         ax2.plot(traj[:, 0], traj[:, 1], alpha=0.3)
-
-    plt.show()
+    if show :
+     plt.show()
     # ==== paramètres du cadrillage ====
     nx, ny = 100, 14      # nb de cases en x et y (ajuste si besoin)
     normalize =False    # True: densité normalisée par nb de piétons actifs à chaque frame
@@ -105,9 +105,10 @@ def run_pedestrian_simulation(L: float = 150.0,
         interval=50, blit=False, repeat=False,
         fargs=(quad,D,steps,ax)
     )
-    plt.tight_layout(); plt.show()
+    if show:
+     plt.tight_layout(); plt.show()
 
-    return ani
+    return (All_positions,All_velocities)
 
 if __name__ == "__main__":
     run_pedestrian_simulation()   
