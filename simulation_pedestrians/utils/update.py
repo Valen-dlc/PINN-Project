@@ -29,3 +29,9 @@ def update2(frame,
     scat.set_offsets(positions[mask])
 
     return (scat,)
+
+
+def update_density(k,quad,D,steps,ax):
+    quad.set_array(D[k].ravel())  # pcolormesh attend un array aplati (ny*nx,)
+    ax.set_title(f"Densité au pas t={k+1}/{steps}")
+    return (quad,)
