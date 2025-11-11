@@ -1,15 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-#voir si sa marche 
 
 from simulation_pedestrians.utils.update import update_density
 
 
+def calcul_density(all_positions,
+                   L: float = 100.0, 
+                   W: int = 7,
+                   N: int = 15,
+                   nx: int=100, 
+                   ny: int = 14,
+                   dt: float = 0.5,
+                   steps: int = 200, 
+                   normalize=False,
+                   showPlot: bool=True):
+    
 
-def calcul_density(All_positions,L: float = 150.0, W: int = 7,N: int = 15,nx: int=100, ny:int = 14,
-                            dt: float = 0.5,
-                            steps: int = 200, show:bool=True):
     # --- Tracé des trajectoires enregistrées ---
     fig2, ax2 = plt.subplots(figsize=(12, 3))
     ax2.set_xlim(0, L)
@@ -20,13 +27,16 @@ def calcul_density(All_positions,L: float = 150.0, W: int = 7,N: int = 15,nx: in
 
     subset = np.linspace(0, N - 1, min(N, 20), dtype=int)  # max 20 traj. pour la lisibilité
     for i in subset:
-        traj = All_positions[:, i, :]
+        traj = all_positions[:, i, :]
         ax2.plot(traj[:, 0], traj[:, 1], alpha=0.3)
-    if show :
+    if showPlot :
      plt.show()
+
+
+
     # ==== paramètres du cadrillage ====
-    nx, ny = 100, 14      # nb de cases en x et y (ajuste si besoin)
-    normalize =False    # True: densité normalisée par nb de piétons actifs à chaque frame
+    nx, ny = nx, ny     # nb de cases en x et y (ajuste si besoin)
+    normalize = normalize    # True: densité normalisée par nb de piétons actifs à chaque frame
 
     # ==== bords des cellules ====
     x_edges = np.linspace(0, L, nx+1)
@@ -34,12 +44,12 @@ def calcul_density(All_positions,L: float = 150.0, W: int = 7,N: int = 15,nx: in
     x_cent = 0.5*(x_edges[:-1] + x_edges[1:])
     y_cent = 0.5*(y_edges[:-1] + y_edges[1:])
 
-    steps = All_positions.shape[0]
+    steps = all_positions.shape[0]
     D = np.zeros((steps, ny, nx), dtype=float)   # densité par frame
 
    # ==== calcule la densité par frame ====
     for t in range(steps):
-     pos_t = All_positions[t]                 # (N, 2)
+     pos_t = all_positions[t]                 # (N, 2)
      mask = np.isfinite(pos_t[:,0]) & np.isfinite(pos_t[:,1])
      x = pos_t[mask, 0]
      y = pos_t[mask, 1]
@@ -63,7 +73,7 @@ def calcul_density(All_positions,L: float = 150.0, W: int = 7,N: int = 15,nx: in
     vmax = np.percentile(D, 95)
     quad.set_clim(vmin, vmax)
     
-    if show:
+    if showPlot:
      ani2 = FuncAnimation(
         fig, update_density, frames=steps,
         interval=50, blit=False, repeat=False,
