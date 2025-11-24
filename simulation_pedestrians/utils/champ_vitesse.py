@@ -46,7 +46,7 @@ def compute_velocity_field(All_positions, All_velocities, L, W, nx=100, ny=14):
 
 def animate_velocity_field_grid(All_positions, All_velocities,nx=100, ny=14, L: float = 100.0,
                               W: int = 7,
-                                fps=10, scale_quiver=1.0, show=True):
+                                fps=10, scale_quiver=1.0, show=False):
     """
     Affiche/retourne une animation de la vitesse moyenne par cellule de grille.
     - Quiver: vecteur vitesse moyen (U,V)
