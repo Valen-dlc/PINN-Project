@@ -36,6 +36,9 @@ def calcul_density(all_positions,
 
     # ==== paramètres du cadrillage ====
     nx, ny = nx, ny     # nb de cases en x et y (ajuste si besoin)
+    dx=L/nx
+    dy=W/ny
+    cell_area = dx * dy
     normalize = normalize    # True: densité normalisée par nb de piétons actifs à chaque frame
 
     # ==== bords des cellules ====
@@ -57,7 +60,7 @@ def calcul_density(all_positions,
 
      if normalize:
          H = H / max(1, mask.sum())          # normalisation par nb de piétons présents
-     D[t] = H
+     D[t] = H/cell_area
 
 
     # ==== 2) animation frame par frame ====
