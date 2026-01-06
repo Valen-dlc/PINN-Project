@@ -8,14 +8,19 @@ from simulation_pedestrians.utils.update import update_density
 def calcul_density(all_positions,
                    L: float = 100.0, 
                    W: int = 7,
-                   N: int = 15,
-                   nx: int=100, 
+                   nx: int = 100, 
                    ny: int = 14,
-                   dt: float = 0.5,
-                   steps: int = 200, 
                    normalize=False,
-                   showPlot: bool=True):
-    
+                   showPlot: bool = True):
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from matplotlib.animation import FuncAnimation
+
+    # ====================================================
+    # NOMBRE RÉEL DE PIÉTONS
+    # ====================================================
+    N_real = all_positions.shape[1]
 
     # --- Tracé des trajectoires enregistrées ---
     fig2, ax2 = plt.subplots(figsize=(12, 3))
@@ -25,63 +30,42 @@ def calcul_density(all_positions,
     ax2.set_ylabel("y (m)")
     ax2.set_title("Trajectoires des piétons")
 
-    subset = np.linspace(0, N - 1, min(N, 20), dtype=int)  # max 20 traj. pour la lisibilité
+    subset = np.linspace(0, N_real - 1, min(N_real, 20), dtype=int)
     for i in subset:
         traj = all_positions[:, i, :]
         ax2.plot(traj[:, 0], traj[:, 1], alpha=0.3)
-    if showPlot :
-     plt.show()
 
+    if showPlot:
+        plt.show()
 
-
-    # ==== paramètres du cadrillage ====
-    nx, ny = nx, ny     # nb de cases en x et y (ajuste si besoin)
-    dx=L/nx
-    dy=W/ny
+    # ====================================================
+    # PARAMÈTRES DU CADRILLAGE
+    # ====================================================
+    dx = L / nx
+    dy = W / ny
     cell_area = dx * dy
-    normalize = normalize    # True: densité normalisée par nb de piétons actifs à chaque frame
 
-    # ==== bords des cellules ====
-    x_edges = np.linspace(0, L, nx+1)
-    y_edges = np.linspace(0, W, ny+1)
-    x_cent = 0.5*(x_edges[:-1] + x_edges[1:])
-    y_cent = 0.5*(y_edges[:-1] + y_edges[1:])
+    x_edges = np.linspace(0, L, nx + 1)
+    y_edges = np.linspace(0, W, ny + 1)
 
     steps = all_positions.shape[0]
-    D = np.zeros((steps, ny, nx), dtype=float)   # densité par frame
+    D = np.zeros((steps, ny, nx), dtype=float)
 
-   # ==== calcule la densité par frame ====
+    # ====================================================
+    # CALCUL DE LA DENSITÉ
+    # ====================================================
     for t in range(steps):
-     pos_t = all_positions[t]                 # (N, 2)
-     mask = np.isfinite(pos_t[:,0]) & np.isfinite(pos_t[:,1])
-     x = pos_t[mask, 0]
-     y = pos_t[mask, 1]
-     H, _, _ = np.histogram2d(y, x, bins=[y_edges, x_edges])  # (ny, nx)
+        pos_t = all_positions[t]
+        mask = np.isfinite(pos_t[:, 0]) & np.isfinite(pos_t[:, 1])
+        x = pos_t[mask, 0]
+        y = pos_t[mask, 1]
 
-     if normalize:
-         H = H / max(1, mask.sum())          # normalisation par nb de piétons présents
-     D[t] = H/cell_area
+        H, _, _ = np.histogram2d(y, x, bins=[y_edges, x_edges])
 
+        if normalize:
+            H = H / max(1, mask.sum())
 
-    # ==== 2) animation frame par frame ====
-    fig, ax = plt.subplots(figsize=(12, 3))
-    quad = ax.pcolormesh(x_edges, y_edges, D[0], shading='auto')
-    cbar = plt.colorbar(quad, ax=ax, label=("densité normalisée" if normalize else "comptes"))
-    ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)")
-    ax.set_xlim(0, L); ax.set_ylim(0, W)
-    ax.set_title("Densité par pas de temps")
+        D[t] = H / cell_area
 
-    # échelle de couleur fixe pour éviter le pompage (prend des percentiles robustes)
-    vmin = np.percentile(D, 5)
-    vmax = np.percentile(D, 95)
-    quad.set_clim(vmin, vmax)
-    
-    if showPlot:
-     ani2 = FuncAnimation(
-        fig, update_density, frames=steps,
-        interval=50, blit=False, repeat=False,
-        fargs=(quad,D,steps,ax))
-     plt.tight_layout(); plt.show()
-
-    return (D)
+    return D
 
