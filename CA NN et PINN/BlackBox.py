@@ -3,14 +3,14 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
-# --- Paramètres du Professeur ---
+# Paramètres de la simulation 
 L, W = 10.0, 5.0
 v_desired, relax_time = 1.3, 0.5
 A, B, wall_repulsion = 20, 0.5, 5
 dt, T_sim = 0.02, 3.0
 steps = int(T_sim / dt)
 
-# --- Moteur de simulation (Code Prof) ---
+# Moteur de simulation basé sur le modèle des forces sociales
 def social_forces(positions, velocities):
     N = positions.shape[0]
     forces = np.zeros_like(positions)
@@ -37,21 +37,21 @@ def run_simulation(N):
         vel += f * dt; pos += vel * dt
     return pos, vel
 
-# --- Collecte des données ---
+# Collecte des données d'entraînement (densité,flux)
 density_flux_pairs = []
-print("Génération des données (Simulation du prof)...")
+print("Génération des données (Simulation)...")
 for k in range(100): # N_tirages
-    N = np.random.randint(1, 80)
+    N = np.random.randint(1, 120)
     pos, vel = run_simulation(N)
     density = N / (L * W)
     flux = density * np.mean(vel[:, 0])
     density_flux_pairs.append((density, flux))
 
 densities, fluxes = zip(*density_flux_pairs)
-rho_train = torch.tensor(densities, dtype=torch.float32).view(-1, 1)
+rho_train = torch.tensor(densities, dtype=torch.float32).view(-1, 1) #On reshape pour Pytorch
 phi_train = torch.tensor(fluxes, dtype=torch.float32).view(-1, 1)
 
-# --- Ton Réseau de Neurones (S'inspirant de ton code) ---
+# Réseau de Neurones simple (reconstruction de la fonction phi(rho))
 class PhiNet(nn.Module):
     def __init__(self):
         super().__init__()
@@ -60,27 +60,53 @@ class PhiNet(nn.Module):
 
 model = PhiNet()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+criterion = nn.MSELoss()
 
+# Entraînement avec suivi de la loss
+loss_history = []  # Liste pour stocker l'évolution de l'erreur
 print("Entraînement du NN...")
+
 for epoch in range(2001):
     optimizer.zero_grad()
-    loss = nn.MSELoss()(model(rho_train), phi_train)
-    loss.backward(); optimizer.step()
+    outputs = model(rho_train)
+    loss = criterion(outputs, phi_train)
+    loss.backward()
+    optimizer.step()
+    
+   
+    loss_history.append(loss.item()) # Stockage de la loss à chaque itération
+    
+    if epoch % 500 == 0:
+        print(f"Époch {epoch} : Loss = {loss.item():.6f}")
 
-# --- Affichage identique au prof ---
+# --- Affichage des résultats ---
+
+# 1. Courbe de Loss (Apprentissage)
+plt.figure(figsize=(8, 4))
+plt.plot(loss_history)
+plt.yscale('log') # Echelle logarithmique pour mieux visualiser la convergence.
+plt.xlabel("Epochs")
+plt.ylabel("Loss (MSE)")
+plt.title("Évolution de l'erreur pendant l'entraînement")
+plt.grid(True, which="both", ls="-", alpha=0.5)
+plt.show()
+
+# 2. Comparaison Données vs Modèle
 rho_test = torch.linspace(0, max(densities), 100).view(-1, 1)
 phi_pred = model(rho_test).detach().numpy()
 
-# plt.figure(figsize=(8, 6))
-#plt.scatter(densities, fluxes, color="black", label="Données Empiriques (simulation)")
-#plt.plot(rho_test.numpy(), phi_pred, 'r-', linewidth=2, label="Diagramme fondamental appris")
-#plt.xlabel("Densité moyenne (piétons/m²)")
-#plt.ylabel("Flux moyen (piétons/(m·s))")
-#plt.title("Comparaison : Données Empiriques vs Modèle Appris")
-#plt.legend(); plt.grid(True); plt.show()
 plt.figure(figsize=(8, 6))
+plt.scatter(densities, fluxes, color="black", alpha=0.5, label="Données de simulation")
+plt.plot(rho_test.numpy(), phi_pred, 'r-', linewidth=3, label="Modèle (Neural Net)")
+plt.xlabel("Densité moyenne (piétons/m²)")
+plt.ylabel("Flux moyen (piétons/(m·s))")
+plt.title("Diagramme Fondamental Appris")
+plt.legend()
+plt.grid(True)
+plt.show()
 plt.scatter(densities, fluxes, color="black", label="Données Empiriques (simulation)")
 plt.xlabel("Densité moyenne (piétons/m²)")
 plt.ylabel("Flux moyen (piétons/(m·s))")
 plt.title("Comparaison : Données Empiriques issus de 100 simulations aléatoires")
+
 plt.legend(); plt.grid(True); plt.show()
